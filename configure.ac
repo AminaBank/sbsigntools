@@ -1,4 +1,4 @@
-AC_INIT([sbsigntool], [0.9.4], [James.Bottomley@HansenPartnership.com])
+AC_INIT([sbsigntool], [0.9.5], [James.Bottomley@HansenPartnership.com])
 
 AM_INIT_AUTOMAKE()
 
@@ -55,9 +55,12 @@ AC_DEFINE_UNQUOTED(HAVE_LITTLE_ENDIAN, $little_endian, [Little-endian system])
 AC_DEFINE_UNQUOTED(HAVE_BIG_ENDIAN, $big_endian, [Big-endian system])
 
 PKG_PROG_PKG_CONFIG()
-PKG_CHECK_MODULES(libcrypto, libcrypto,
-    [],
-    AC_MSG_ERROR([libcrypto (from the OpenSSL package) is required]))
+PKG_CHECK_MODULES(libcrypto, [libcrypto >= 3.0.0],
+                  [ac_have_openssl3=1],
+                  [PKG_CHECK_MODULES(libcrypto, libcrypto,
+                   [],
+                   AC_MSG_ERROR([libcrypto (from the OpenSSL package) is required]))])
+AM_CONDITIONAL(HAVE_OPENSSL3, test "$ac_have_openssl3" = "1")
 
 PKG_CHECK_MODULES(uuid, uuid,
     [],
@@ -65,7 +68,7 @@ PKG_CHECK_MODULES(uuid, uuid,
 
 dnl gnu-efi headers require extra include dirs
 EFI_ARCH=$(uname -m | sed 's/i.86/ia32/;s/arm.*/arm/')
-AM_CONDITIONAL(TEST_BINARY_FORMAT, [ test "$EFI_ARCH" = "arm" -o "$EFI_ARCH" = "aarch64" ])
+AM_CONDITIONAL(TEST_BINARY_FORMAT, [ test "$EFI_ARCH" = "arm" -o "$EFI_ARCH" = "aarch64" -o "$EFI_ARCH" = riscv64 ])
 
 ##
 # no consistent view of where gnu-efi should dump the efi stuff, so find it
